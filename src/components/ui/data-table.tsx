@@ -17,6 +17,7 @@ import {
   Loader2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Checkbox } from '@/components/ui/checkbox'
 
 export type SortDirection = "asc" | "desc" | null
 
@@ -51,6 +52,9 @@ export interface DataTableProps<T> {
   sortDirection?: SortDirection
   onSort?: (key: string, direction: SortDirection) => void
   className?: string
+  selectable?: boolean
+  selectedRows?: T[]
+  onSelectionChange?: (rows: T[]) => void
 }
 
 export function DataTable<T>({
@@ -74,6 +78,9 @@ export function DataTable<T>({
   sortDirection,
   onSort,
   className,
+  selectable = false,
+  selectedRows = [],
+  onSelectionChange,
 }: DataTableProps<T>) {
   const [internalSortBy, setInternalSortBy] = React.useState<string | null>(null)
   const [internalSortDirection, setInternalSortDirection] = React.useState<SortDirection>(null)
@@ -147,6 +154,32 @@ export function DataTable<T>({
     return <ChevronDown className="ml-2 h-4 w-4" />
   }
 
+  const isRowSelected = (row: T) => {
+    return selectedRows.some((selected) => JSON.stringify(selected) === JSON.stringify(row))
+  }
+
+  const handleRowSelection = (row: T) => {
+    if (!onSelectionChange) return
+
+    if (isRowSelected(row)) {
+      onSelectionChange(selectedRows.filter((selected) => JSON.stringify(selected) !== JSON.stringify(row)))
+    } else {
+      onSelectionChange([...selectedRows, row])
+    }
+  }
+
+  const handleSelectAll = () => {
+    if (!onSelectionChange) return
+
+    if (selectedRows.length === paginatedData.length) {
+      onSelectionChange([])
+    } else {
+      onSelectionChange([...paginatedData])
+    }
+  }
+
+  const allSelected = paginatedData.length > 0 && selectedRows.length === paginatedData.length
+
   return (
     <div className={cn("w-full space-y-4", className)}>
       {searchable && (
@@ -167,6 +200,15 @@ export function DataTable<T>({
         <Table>
           <TableHeader>
             <TableRow>
+              {selectable && (
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={allSelected}
+                    onCheckedChange={handleSelectAll}
+                    aria-label="Select all"
+                  />
+                </TableHead>
+              )}
               {columns.map((column) => (
                 <TableHead key={column.key} style={{ width: column.width }} className={cn(column.className)}>
                   {column.sortable ? (
@@ -188,7 +230,7 @@ export function DataTable<T>({
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell colSpan={columns.length + (selectable ? 1 : 0)} className="h-24 text-center">
                   <div className="flex items-center justify-center gap-2">
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                     <span className="text-muted-foreground">Loading...</span>
@@ -197,7 +239,7 @@ export function DataTable<T>({
               </TableRow>
             ) : paginatedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell colSpan={columns.length + (selectable ? 1 : 0)} className="h-24 text-center">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <p className="text-muted-foreground">{emptyMessage}</p>
                   </div>
@@ -208,8 +250,21 @@ export function DataTable<T>({
                 <TableRow
                   key={rowIndex}
                   onClick={() => onRowClick?.(row)}
-                  className={cn(onRowClick && "cursor-pointer hover:bg-muted/50", rowClassName?.(row))}
+                  className={cn(
+                    onRowClick && "cursor-pointer hover:bg-muted/50",
+                    isRowSelected(row) && "bg-muted/50",
+                    rowClassName?.(row)
+                  )}
                 >
+                  {selectable && (
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={isRowSelected(row)}
+                        onCheckedChange={() => handleRowSelection(row)}
+                        aria-label="Select all"
+                      />
+                    </TableCell>
+                  )}
                   {columns.map((column) => {
                     const value = column.accessor(row)
                     return (

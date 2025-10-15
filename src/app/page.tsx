@@ -12,6 +12,7 @@ import { toast } from "sonner"
 
 export default function Home() {
   const [users, setUsers] = React.useState<User[]>([])
+  const [selectedUsers, setSelectedUsers] = React.useState<User[]>([])
   const [posts, setPosts] = React.useState<Post[]>([])
   const [todos, setTodos] = React.useState<Todo[]>([])
   const [loading, setLoading] = React.useState(false)
@@ -340,6 +341,9 @@ export default function Home() {
                   onPageSizeChange={handlePageSizeChange}
                   onRowClick={handleRowClick}
                   emptyMessage="No users found"
+                  selectable={true}
+                  selectedRows={selectedUsers}
+                  onSelectionChange={setSelectedUsers}
                 />
               </CardContent>
             </Card>
