@@ -15,13 +15,13 @@ import {
   SlidersHorizontal,
 } from 'lucide-react'
 
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -281,8 +281,8 @@ export function DataTable<T>({
   const selectedIdSet = React.useMemo(() => {
     if (selectedRows) return new Set(selectedRows.map((row, index) => resolveId(row, index)))
     return internalSelectedIds
-  // resolveId only depends on getRowId.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // resolveId only depends on getRowId.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedRows, internalSelectedIds, getRowId])
 
   const updateSelection = (nextIds: Set<string>) => {
@@ -360,11 +360,17 @@ export function DataTable<T>({
             {toolbarActions}
             {columnVisibility && (
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button type="button" variant="outline" size="sm"><Columns3 className="mr-2 h-4 w-4" /> Columns</Button>
+                <DropdownMenuTrigger
+                  asChild
+                >
+                  <Button type="button" variant="outline" size="sm">
+                    <Columns3 className="mr-2 h-4 w-4" /> Columns
+                  </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+                  </DropdownMenuGroup>
                   <DropdownMenuSeparator />
                   {columns.filter((column) => column.hideable !== false).map((column) => (
                     <DropdownMenuCheckboxItem key={column.key} checked={!activeHiddenColumns.includes(column.key)} onCheckedChange={(checked) => toggleHiddenColumn(column.key, checked === true)}>
@@ -376,7 +382,11 @@ export function DataTable<T>({
             )}
             {exportable && (
               <DropdownMenu>
-                <DropdownMenuTrigger asChild><Button type="button" variant="outline" size="sm"><Download className="mr-2 h-4 w-4" /> Export</Button></DropdownMenuTrigger>
+                <DropdownMenuTrigger asChild>
+                  <Button type="button" variant="outline" size="sm" >
+                    <Download className="mr-2 h-4 w-4" /> Export
+                  </Button>
+                </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => exportCsv(processedRows, visibleColumns, exportFileName)}>Export current results (CSV)</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => exportCsv(data, visibleColumns, `${exportFileName}-all`)}>Export all loaded rows (CSV)</DropdownMenuItem>
@@ -402,7 +412,7 @@ export function DataTable<T>({
                 <TableHead className="w-12">
                   <Checkbox
                     aria-label="Select all rows on this page"
-                    checked={allDisplayedSelected ? true : someDisplayedSelected ? 'indeterminate' : false}
+                    checked={allDisplayedSelected}
                     onCheckedChange={(checked) => {
                       const next = new Set(selectedIdSet)
                       displayedRows.forEach((row, index) => {
@@ -506,7 +516,7 @@ export function DataTable<T>({
           <div className="flex flex-wrap items-center gap-2">
             <span>Rows per page</span>
             <Select value={String(activePageSize)} onValueChange={(value) => changePageSize(Number(value))}>
-              <SelectTrigger className="h-8 w-[76px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-8 w-19"><SelectValue /></SelectTrigger>
               <SelectContent>{pageSizeOptions.map((size) => <SelectItem key={size} value={String(size)}>{size}</SelectItem>)}</SelectContent>
             </Select>
             <span>
